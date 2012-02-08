@@ -50,6 +50,7 @@ import java.awt.event.KeyEvent;
 public class ButtonDemo extends JPanel
                         implements ActionListener {
     protected JButton b1, b2, b3;
+    static final long serialVersionUID=1;
 
     public ButtonDemo() {
         ImageIcon leftButtonIcon = createImageIcon("images/right.gif");
@@ -105,7 +106,7 @@ public class ButtonDemo extends JPanel
         if (imgURL != null) {
             return new ImageIcon(imgURL);
         } else {
-            System.err.println("Couldn't find file: " + path);
+        	System.err.println("Couldn't find file: " + path);
             return null;
         }
     }
