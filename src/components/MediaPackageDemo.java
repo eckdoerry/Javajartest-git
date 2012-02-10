@@ -37,26 +37,36 @@ package components;
 
 import java.applet.Applet;
 import java.applet.AudioClip;
+import java.awt.BorderLayout;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
 
 import javax.swing.AbstractButton;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JTextArea;
 
 
 public class MediaPackageDemo extends JPanel
                         implements ActionListener {
-    protected JButton b1, b2, b3;
+    protected JButton b1, b2, b3, b4;
+    protected JTextArea t1;
     static final long serialVersionUID=1;
     private AudioClip beepSound;
+    private static ArrayList<String> textContents;
    
 
     public MediaPackageDemo() {
+        setLayout(new BorderLayout());
         ImageIcon leftButtonIcon = createImageIcon("images/right.gif");
         ImageIcon middleButtonIcon = createImageIcon("images/middle.gif");
         ImageIcon rightButtonIcon = createImageIcon("images/left.gif");
@@ -78,23 +88,36 @@ public class MediaPackageDemo extends JPanel
         b3.setMnemonic(KeyEvent.VK_E);
         b3.setActionCommand("enable");
         b3.setEnabled(false);
+        
+        b4 = new JButton("Clear the Deck!");
+        b4.setActionCommand("doClear");
+        b4.setEnabled(false);
+        
+        t1= new JTextArea("", 40, 40);
 
         //Listen for actions on buttons 1 and 3.  // Eck: Listens on button2 now too
         b1.addActionListener(this);
         b3.addActionListener(this);
         b2.addActionListener(this);
+        b4.addActionListener(this);
 
         b1.setToolTipText("Click this button to disable the middle button.");
         b2.setToolTipText("This middle button plays a sound when you click it.");
         b3.setToolTipText("Click this button to enable the middle button.");
+        b4.setToolTipText("Click this button to clear the text.");
 
         //Add Components to this container, using the default FlowLayout.
-        add(b1);
-        add(b2);
-        add(b3);
+        add(b4, BorderLayout.NORTH);
+        add(b1, BorderLayout.WEST);
+        add(b2, BorderLayout.CENTER);
+        add(b3, BorderLayout.EAST);
+        add(t1, BorderLayout.SOUTH);
         
         // Finally, load up the sound clip so it's ready to play;
         beepSound = createAudioClip("sounds/cowboy.wav");
+       
+        // And now load up the text file from the jar. Just read into String array...
+        textContents= getTextFile("docs/demo.txt");
     }
 
     public void actionPerformed(ActionEvent e) {
@@ -104,10 +127,19 @@ public class MediaPackageDemo extends JPanel
     		b3.setEnabled(true);
     	} else if ("doAction".equals(e.getActionCommand())) {
     		if (beepSound != null) {
-    			beepSound.play();
+    			beepSound.play();  			
     		} else {
     			Toolkit.getDefaultToolkit().beep();
     		}
+    		//and dump the textfile contents to the textarea...again
+    		for(int i=0; i<textContents.size(); i++) {
+    			t1.append(textContents.get(i)+"\n");
+    		}
+    		t1.append("\n");
+    		b4.setEnabled(true);
+    	} else if ("doClear".equals(e.getActionCommand())) {
+    		t1.setText("");
+    		b4.setEnabled(false);
     	} else {
     		b2.setEnabled(true);
     		b1.setEnabled(true);
@@ -135,6 +167,30 @@ public class MediaPackageDemo extends JPanel
         	System.err.println("Couldn't find file: " + path);
             return null;
         }
+    }
+    
+    /** Used to read in a specified text file, which is stashed in the package (and thus
+     * ultimately in the JAR file, if you choose to package it up that way!
+    */
+    private static ArrayList<String> getTextFile(String path) {
+    	InputStream inStream= MediaPackageDemo.class.getResourceAsStream(path);
+    	ArrayList<String> inList = new ArrayList<String>();
+    	if (inStream != null) {
+    		BufferedReader in= new BufferedReader(new InputStreamReader(inStream));
+    		String nextLine;
+    		try {   // Whole try-catch is a bit of a waste, but needed to satisfy readLine 
+    			while( (nextLine= in.readLine()) != null) {
+    				inList.add(nextLine);
+    			}
+    		} catch (IOException ex) {
+    			System.out.println("something bad happened!");
+    			System.exit(0);
+    		}
+    		return inList;
+    	} else {
+    		System.err.println("Couldn't find file: " + path);
+    		return null;
+    	}
     }
 
     /**
